@@ -482,39 +482,73 @@
     const webapp = window.Telegram?.WebApp;
     if (webapp) { webapp.ready(); webapp.expand(); }
 
-    const ADMIN_USERNAMES = ['xqwex0'];
+    // ================================================
+    // 1️⃣ ТОВАРЫ ТЕПЕРЬ ПРИХОДЯТ ОТ БОТА
+    // ================================================
+    // Бот будет подставлять сюда актуальный список товаров при открытии
+    // Это ГЛОБАЛЬНЫЙ список — одинаковый для всех пользователей!
+    let PRODUCTS = window.PRODUCTS_DATA || [];
 
-    // ── PRODUCTS — persisted in localStorage ──
-    let PRODUCTS = JSON.parse(localStorage.getItem('shopProducts') || 'null') || [
-      { id:1, name:"Кроссовки Maison Margiela Replica", price:19990, stock:1, category:"Обувь", images:["mm6.jpg","mm61.jpg","mm62.jpg","mm63.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["40","41"], sku:"MM6-REPL" },
-      { id:2, name:"Штаны Palm Angels Rainbow", price:9990, stock:1, category:"Джинсы", images:["plm.jpg","plm1.jpg","plm2.jpg","plm3.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["XS","S"], sku:"PA-RNBW" },
-    ];
-    function saveProducts() { localStorage.setItem('shopProducts', JSON.stringify(PRODUCTS)); }
+    // ================================================
+    // 2️⃣ АДМИНЫ ОПРЕДЕЛЯЮТСЯ БОТОМ
+    // ================================================
+    const ADMIN_USERNAMES = window.ADMIN_DATA || [];
 
-    const CATEGORIES_LIST = [
-      { name:"Все", image:"vse1.jpg", style:"object-fit:cover;height:100%;" },
-      { name:"Кофты", image:"fc6c66a6-32cb-4501-9dfe-600d858d2f68.png", style:"object-fit:cover;height:120%;" },
-      { name:"Обувь", image:"b3b66304-9a0f-4c68-8423-f74816610642.png", style:"object-fit:cover;height:100%;" },
-      { name:"Джинсы", image:"31ec3e37-242a-4931-a701-70164ae5ca72.png", style:"object-fit:cover;height:100%;" },
-      { name:"Футболки", image:"caf4d740-22d3-4a6e-8556-47ece8af5858.png", style:"object-fit:cover;height:100%;" },
-      { name:"Куртки", image:"kurtki.jpg", style:"object-fit:cover;height:100%;" },
-      { name:"Штаны/Шорты", image:"stani sorti.jpg", style:"object-fit:cover;height:100%;" },
-      { name:"Сумки", image:"sumki.jpg", style:"object-fit:cover;height:100%;" },
-      { name:"Аксессуары", image:"9b04804e-0864-4ca4-aa19-6e171a661bac.png", style:"object-fit:cover;height:120%;" },
-    ];
+    // ================================================
+    // 3️⃣ ОТПРАВКА ДАННЫХ БОТУ (вместо localStorage)
+    // ================================================
+    function sendToBot(data) {
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.sendData(JSON.stringify(data));
+            showToast('📤 Отправлено на сервер...', true);
+        } else {
+            console.log('Telegram WebApp not available', data);
+            showToast('❌ Не удалось отправить данные', false);
+        }
+    }
 
-    let activeCategory = "Все", searchString = "";
-    // ── CART — persisted in localStorage ──
+    // ================================================
+    // 4️⃣ СОХРАНЕНИЕ ТОВАРОВ (теперь через бота)
+    // ================================================
+    function saveProductsToServer() {
+        // Товары сохраняются на сервере бота
+        // Этот метод больше не нужен для локального сохранения
+        console.log('Товары хранятся на сервере бота');
+    }
+
+    // ================================================
+    // 5️⃣ ИНИЦИАЛИЗАЦИЯ
+    // ================================================
+    function init() {
+        const tg = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        const username = tg?.username || '';
+        const firstName = tg?.first_name || 'A';
+        document.getElementById('headerAvatar').innerText = firstName[0].toUpperCase();
+        
+        // Показываем кнопку админа только для админов
+        if (ADMIN_USERNAMES.includes(username)) {
+            document.getElementById('adminBtn').style.display = 'block';
+        }
+        
+        renderCategoryList();
+        renderItemsGrid();
+        syncCartIndicators();
+        syncFavBadge();
+    }
+
+    // ================================================
+    // 6️⃣ КОРЗИНА И ИЗБРАННОЕ (остаются локальными)
+    // ================================================
     let shoppingCart = JSON.parse(localStorage.getItem('shopCart') || '{}');
     function saveCart() { localStorage.setItem('shopCart', JSON.stringify(shoppingCart)); }
-
-    let currentViewingProduct = null, selectedSize = "", activeSlidePos = 0;
-    let savedOrders = JSON.parse(localStorage.getItem('shopOrders') || '[]');
-    function saveOrders() { localStorage.setItem('shopOrders', JSON.stringify(savedOrders)); }
-
+    
     let favourites = new Set(JSON.parse(localStorage.getItem('shopFavs') || '[]'));
     function saveFavs() { localStorage.setItem('shopFavs', JSON.stringify([...favourites])); }
 
+    // ================================================
+    // 7️⃣ ОСТАЛЬНОЙ КОД (без изменений, кроме aSaveProduct и aConfirmDelete)
+    // ================================================
+    
     function isSoldOut(p) { return p.stock !== undefined && p.stock <= 0; }
 
     function toggleFav(id, e) {
@@ -535,16 +569,6 @@
       if (currentQty >= p.stock) { showToast(`В наличии только ${p.stock} шт. — больше добавить нельзя`); return; }
       if (shoppingCart[key]) shoppingCart[key].qty++; else shoppingCart[key] = { product:p, size:p.sizes[0]||'', qty:1 };
       saveCart(); showToast('Добавлено в корзину!', true); syncCartIndicators();
-    }
-
-    // ── INIT ──
-    function init() {
-      const tg = window.Telegram?.WebApp?.initDataUnsafe?.user;
-      const username = tg?.username || '';
-      const firstName = tg?.first_name || 'A';
-      document.getElementById('headerAvatar').innerText = firstName[0].toUpperCase();
-      if (ADMIN_USERNAMES.includes(username)) document.getElementById('adminBtn').style.display = 'block';
-      renderCategoryList(); renderItemsGrid(); syncCartIndicators(); syncFavBadge();
     }
 
     function navigateTo(id) {
@@ -804,6 +828,8 @@
     function aAddSize(){const inp=document.getElementById('aSzInput'),val=inp.value.trim();if(!val)return;val.split(',').forEach(s=>{const t=s.trim();if(t&&!aCurSizes.includes(t))aCurSizes.push(t);});inp.value='';aRenderSizes();}
     function aRemoveSize(s){aCurSizes=aCurSizes.filter(x=>x!==s);aRenderSizes();}
     function aRenderSizes(){const c=document.getElementById('aSzTags');c.innerHTML='';aCurSizes.forEach(s=>{const t=document.createElement('div');t.className='sz-tag';t.innerHTML=`${s}<span class="sz-x" onclick="aRemoveSize('${s}')">✕</span>`;c.appendChild(t);});}
+    
+    // 🔥 ГЛАВНОЕ ИЗМЕНЕНИЕ: сохраняем товары через бота
     function aSaveProduct(){
       const name=document.getElementById('afName').value.trim();
       const price=parseInt(document.getElementById('afPrice').value);
@@ -816,20 +842,42 @@
       if(!price||price<=0){showToast('Введите цену!');return;}
       if(images.length===0){showToast('Добавьте фото!');return;}
       if(aCurSizes.length===0){showToast('Добавьте размеры!');return;}
+      
+      const productData = {name, price, stock, category:cat, desc, sku, images, sizes:aCurSizes};
+      
       if(aEditingId){
-        const idx=PRODUCTS.findIndex(p=>p.id===aEditingId);
-        if(idx!==-1)PRODUCTS[idx]={...PRODUCTS[idx],name,price,stock,category:cat,desc,sku,images,sizes:aCurSizes};
-        showToast('Обновлено ✅',true);
+        // Редактирование
+        sendToBot({
+          action: 'edit_product',
+          id: aEditingId,
+          product: productData
+        });
+        showToast('📤 Отправлено на сервер...', true);
       }else{
-        PRODUCTS.push({id:Date.now(),name,price,stock,category:cat,desc,sku,images,sizes:aCurSizes});
-        showToast('Добавлено ✅',true);
+        // Добавление
+        sendToBot({
+          action: 'add_product',
+          product: productData
+        });
+        showToast('📤 Отправлено на сервер...', true);
       }
-      saveProducts();renderItemsGrid();aCloseModal();renderAdminPage();
+      aCloseModal();
     }
+
+    // 🔥 ГЛАВНОЕ ИЗМЕНЕНИЕ: удаляем товар через бота
+    function aConfirmDelete(){
+      if(!aDelId)return;
+      sendToBot({
+        action: 'delete_product',
+        id: aDelId
+      });
+      aCloseConfirm();
+      showToast('📤 Отправлено на сервер...', true);
+    }
+
     let aDelId=null;
     function aAskDelete(id,name){aDelId=id;document.getElementById('aDelName').innerText=`"${name}"`;document.getElementById('aDelOverlay').classList.add('show');}
     function aCloseConfirm(){document.getElementById('aDelOverlay').classList.remove('show');aDelId=null;}
-    function aConfirmDelete(){if(!aDelId)return;PRODUCTS=PRODUCTS.filter(p=>p.id!==aDelId);saveProducts();renderItemsGrid();aCloseConfirm();renderAdminPage();showToast('Удалено',true);}
 
     // ── TOAST ──
     function showToast(text,isSuccess=false){
@@ -837,6 +885,24 @@
       t.classList.toggle("success-toast",isSuccess);t.classList.add("show");
       clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove("show"),3000);
     }
+
+    // Список категорий
+    const CATEGORIES_LIST = [
+      { name:"Все", image:"vse1.jpg", style:"object-fit:cover;height:100%;" },
+      { name:"Кофты", image:"fc6c66a6-32cb-4501-9dfe-600d858d2f68.png", style:"object-fit:cover;height:120%;" },
+      { name:"Обувь", image:"b3b66304-9a0f-4c68-8423-f74816610642.png", style:"object-fit:cover;height:100%;" },
+      { name:"Джинсы", image:"31ec3e37-242a-4931-a701-70164ae5ca72.png", style:"object-fit:cover;height:100%;" },
+      { name:"Футболки", image:"caf4d740-22d3-4a6e-8556-47ece8af5858.png", style:"object-fit:cover;height:100%;" },
+      { name:"Куртки", image:"kurtki.jpg", style:"object-fit:cover;height:100%;" },
+      { name:"Штаны/Шорты", image:"stani sorti.jpg", style:"object-fit:cover;height:100%;" },
+      { name:"Сумки", image:"sumki.jpg", style:"object-fit:cover;height:100%;" },
+      { name:"Аксессуары", image:"9b04804e-0864-4ca4-aa19-6e171a661bac.png", style:"object-fit:cover;height:120%;" },
+    ];
+
+    let activeCategory = "Все", searchString = "";
+    let savedOrders = JSON.parse(localStorage.getItem('shopOrders') || '[]');
+    function saveOrders() { localStorage.setItem('shopOrders', JSON.stringify(savedOrders)); }
+    let currentViewingProduct = null, selectedSize = "", activeSlidePos = 0;
 
     document.getElementById('aModalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)aCloseModal();});
     document.getElementById('aDelOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)aCloseConfirm();});
