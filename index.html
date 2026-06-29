@@ -487,7 +487,8 @@
     // ── PRODUCTS — persisted in localStorage ──
     let PRODUCTS = JSON.parse(localStorage.getItem('shopProducts') || 'null') || [
       { id:1, name:"Кроссовки Maison Margiela Replica", price:19990, stock:1, category:"Обувь", images:["mm6.jpg","mm61.jpg","mm62.jpg","mm63.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["40","41"], sku:"MM6-REPL" },
-      { id:2, name:"Штаны Palm Angels Rainbow", price:9990, stock:1, category:"Джинсы", images:["plm.jpg","plm1.jpg","plm2.jpg","plm3.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["XS","S"], sku:"PA-RNBW" },
+      { id:2, name:"Штаны Palm Angels Rainbow", price:9990, stock:1, category:"Штаны/шорты", images:["plm.jpg","plm1.jpg","plm2.jpg","plm3.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["XS","S"], sku:"PA-RNBW" },
+      { id:3, name:"Олимпийка Palm Angels Red", price:11990, stock:1, category:"Штаны/шорты", images:[".jpg","plm1.jpg","plm2.jpg","plm3.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["XS","S"], sku:"PA-RNBW" },
     ];
     function saveProducts() { localStorage.setItem('shopProducts', JSON.stringify(PRODUCTS)); }
 
