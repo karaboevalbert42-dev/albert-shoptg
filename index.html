@@ -482,13 +482,14 @@
     const webapp = window.Telegram?.WebApp;
     if (webapp) { webapp.ready(); webapp.expand(); }
 
-    const ADMIN_USERNAMES = ['xqwex0'];
+    const ADMIN_USERNAMES = ['reviewcrew'];
 
     // ── PRODUCTS — persisted in localStorage ──
     let PRODUCTS = JSON.parse(localStorage.getItem('shopProducts') || 'null') || [
       { id:1, name:"Кроссовки Maison Margiela Replica", price:19990, stock:1, category:"Обувь", images:["mm6.jpg","mm61.jpg","mm62.jpg","mm63.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["40"], sku:"MM6-REPL" },
       { id:2, name:"Штаны Palm Angels Rainbow", price:9990, stock:1, category:"Штаны/шорты", images:["plm.jpg","plm1.jpg","plm2.jpg","plm3.jpg"], desc:"Оригинал\nСостояние: 10/10", sizes:["XS"], sku:"PA-RNBW" },
       { id:3, name:"Олимпийка Palm Angels Red", price:11990, stock:1, category:"кофты", images:["palmm1.jpg","palmm2.jpg","palmm3.jpg"], desc:"Олимпийка Palm Angels\n\n11990₽\n\nОригинал.\nСостояние: 10/10\nРазмер: M\n\nCLG: Аутентичен (Бьется)\n\nЗамеры*\nДлина по застежке с воротником: 62см\nДлина рукава от плеча: 60см\nШирина: 42см", sizes:["M"], sku:"plm-001" },
+      { id:4, name:"Штаны Palm Angels Red", price:9990, stock:1, category:"Штаны/шорты", images:["plmpantred1.jpg","palmpant2.jpg","palmpant3.jpg"], desc:"Штаны Palm Angels\n\n9990₽\n\nОригинал.\nСостояние: 10/10\nРазмер: S\n\nCLG: Аутентичен (Бьется)\n\nЗамеры*\nДлина: 101см\nПолупояс: 33см тянется до 42см\nВыход в застегнутом виде: 18см", sizes:["S"], sku:"plm-002" },
     ];
     function saveProducts() { localStorage.setItem('shopProducts', JSON.stringify(PRODUCTS)); }
 
